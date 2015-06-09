@@ -11,8 +11,17 @@ if (NOT OPENCMISS_INSTALL_DIR)
     set(OPENCMISS_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../install)
     get_filename_component(OPENCMISS_INSTALL_DIR ${OPENCMISS_INSTALL_DIR} ABSOLUTE)
 endif()
-if (NOT EXISTS ${OPENCMISS_INSTALL_DIR} OR NOT EXISTS ${OPENCMISS_INSTALL_DIR}/OpenCMISSBuildContext.cmake)
-    message(FATAL_ERROR "OpenCMISS is not installed at '${OPENCMISS_INSTALL_DIR}'. Please specify OPENCMISS_INSTALL_DIR.")
+
+# Have us look for a OpenCMISS installation directly at the given path or at the path suffixed with the current build type - ease of use.
+string(TOLOWER "${CMAKE_BUILD_TYPE}" _BUILDTYPE)
+find_file(HAVE_BUILDCONTEXT OpenCMISSBuildContext.cmake
+    HINTS ${OPENCMISS_INSTALL_DIR} 
+        ${OPENCMISS_INSTALL_DIR}/${_BUILDTYPE} 
+        ${OPENCMISS_INSTALL_DIR}/release
+)
+unset(_BUILDTYPE)
+if (NOT HAVE_BUILDCONTEXT)
+    message(FATAL_ERROR "Could not find OpenCMISS. No OpenCMISSBuildContext.cmake found; OPENCMISS_INSTALL_DIR='${OPENCMISS_INSTALL_DIR}'")
 endif()
 include(${OPENCMISS_INSTALL_DIR}/OpenCMISSBuildContext.cmake)
 
@@ -24,7 +33,7 @@ list(APPEND CMAKE_PREFIX_PATH ${OPENCMISS_PREFIX_PATH}) # var defined OpenCMISSB
 
 # Have CMake find the FindOpenCMISS file
 list(APPEND CMAKE_MODULE_PATH ${OPENCMISS_MODULE_PATH})
-find_package(OpenCMISS REQUIRED)
+find_package(IRON REQUIRED)
 
 #################### Actual example code ####################
 
@@ -33,7 +42,7 @@ file(GLOB SRC src/*.f90 src/*.c ../input/*.f90)
 # Add example executable
 add_executable(${EXAMPLE_TARGET} ${SRC})
 # Link to opencmiss - contains forward refs to all other necessary libs
-target_link_libraries(${EXAMPLE_TARGET} PRIVATE opencmiss)
+target_link_libraries(${EXAMPLE_TARGET} PRIVATE iron)
 set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
 if (WIN32)
     target_compile_definitions(${EXAMPLE_TARGET} PRIVATE NOMPIMOD)
