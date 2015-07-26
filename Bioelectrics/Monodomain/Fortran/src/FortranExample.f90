@@ -101,7 +101,6 @@ PROGRAM MONODOMAINEXAMPLE
 
   REAL(CMISSDP) :: X,Y,DISTANCE,gNa_VALUE
   
-  INTEGER(CMISSIntg), PARAMETER :: NUMBER_OF_ELEMENTS=25
   INTEGER(CMISSIntg) :: OUTPUT_FREQUENCY = 1
   REAL(CMISSDP), PARAMETER :: STIM_VALUE = 100.0_CMISSDP
   REAL(CMISSDP), PARAMETER :: STIM_STOP = 0.10_CMISSDP
@@ -139,10 +138,9 @@ PROGRAM MONODOMAINEXAMPLE
   INTEGER(CMISSIntg) :: FirstNodeDomain,LastNodeDomain,NodeDomain
   INTEGER(CMISSIntg) :: Err
 
-
   ! process command line arguments before getting started.
   NUMBER_OF_ARGUMENTS = COMMAND_ARGUMENT_COUNT()
-  IF(NUMBER_OF_ARGUMENTS >= 3) THEN
+  IF(NUMBER_OF_ARGUMENTS >= 6) THEN
     CALL GET_COMMAND_ARGUMENT(1,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
     !IF(STATUS>0) CALL HANDLE_ERROR("Error for command argument 1.")
     READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) PDE_TIME_STEP
@@ -162,9 +160,14 @@ PROGRAM MONODOMAINEXAMPLE
       write(*, '(">>ERROR: File does not exist")')
       stop
     endif
+    CALL GET_COMMAND_ARGUMENT(5,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
+    READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) NUMBER_GLOBAL_X_ELEMENTS
+    CALL GET_COMMAND_ARGUMENT(6,COMMAND_ARGUMENT,ARGUMENT_LENGTH,STATUS)
+    READ(COMMAND_ARGUMENT(1:ARGUMENT_LENGTH),*) NUMBER_GLOBAL_Y_ELEMENTS
   ELSE
     !If there are not enough arguments die horribly
     WRITE(*,'(">>USAGE: ",A)') "MonodomainExample <PDE step size> <stop time> <output frequency> <CellML Model URL>"
+    WRITE(*,'(">>                         ",A)') "<number of elements X direction> <number of elements Y direction>"
     STOP
   ENDIF
 
@@ -180,8 +183,6 @@ PROGRAM MONODOMAINEXAMPLE
 
   !CALL CMISSOutputSetOn("Monodomain",Err)
     
-  NUMBER_GLOBAL_X_ELEMENTS=NUMBER_OF_ELEMENTS
-  NUMBER_GLOBAL_Y_ELEMENTS=NUMBER_OF_ELEMENTS
   NUMBER_GLOBAL_Z_ELEMENTS=0
   
   !Start the creation of a new RC coordinate system
@@ -389,7 +390,7 @@ PROGRAM MONODOMAINEXAMPLE
   
   CALL CMISSCellML_FieldComponentGet(CellML,n98ModelIndex,CMISS_CELLML_PARAMETERS_FIELD,"membrane/IStim",stimcomponent,Err)
   !Set the Stimulus at half the bottom nodes
-  DO node_idx=1,NUMBER_OF_ELEMENTS/2
+  DO node_idx=1,NUMBER_GLOBAL_X_ELEMENTS/2
     CALL CMISSDecomposition_NodeDomainGet(Decomposition,node_idx,1,NodeDomain,Err)
     IF(NodeDomain==ComputationalNodeNumber) THEN
       CALL CMISSField_ParameterSetUpdateNode(CellMLParametersField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1,1, &
@@ -512,7 +513,7 @@ PROGRAM MONODOMAINEXAMPLE
 
   !Now turn the stimulus off
   !Set the Stimulus at node 1
-  DO node_idx=1,NUMBER_OF_ELEMENTS/2
+  DO node_idx=1,NUMBER_GLOBAL_X_ELEMENTS/2
     CALL CMISSDecomposition_NodeDomainGet(Decomposition,node_idx,1,NodeDomain,Err)
     IF(NodeDomain==ComputationalNodeNumber) THEN
       CALL CMISSField_ParameterSetUpdateNode(CellMLParametersField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1,1, &
