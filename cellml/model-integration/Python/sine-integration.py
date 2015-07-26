@@ -16,7 +16,7 @@ from opencmiss import CMISS
 if len(sys.argv) > 1:
     modelFile = sys.argv[1]
 else:
-    modelFile = "https://models.physiomeproject.org/w/andre/sine/rawfile/654722543efff0fb045839758f33bcf438d26979/sin_approximations.xml"
+    modelFile = "http://models.cellml.org/w/andre/sine/rawfile/654722543efff0fb045839758f33bcf438d26979/sin_approximations.xml"
 
 # 1D domain size
 width = 1.0
@@ -32,11 +32,11 @@ stimValue = 0.0
 stimStop = 0.0
 timeStop = 7.0 # [s]
 # this is used in the integration of the CellML model
-odeTimeStep = 0.001 # [s]
+odeTimeStep = 0.1 # [s]
 # this is used in the dummy monodomain problem/solver
 pdeTimeStep = 10.0 # [s]
 # this is the step at which we grab output from the solver
-outputTimeStep = 1.0
+outputTimeStep = 0.1
 # set this to 1 to get exfiles written out during solve
 outputFrequency = 0
 #DOC-END parameters
@@ -283,6 +283,7 @@ dynamicSolver = CMISS.Solver()
 problem.SolversCreateStart()
 # Get the first DAE solver
 problem.SolverGet([CMISS.ControlLoopIdentifiers.NODE],1,daeSolver)
+daeSolver.DAESolverTypeSet(CMISS.DAESolverTypes.BDF)
 daeSolver.DAETimeStepSet(odeTimeStep)
 daeSolver.OutputTypeSet(CMISS.SolverOutputTypes.NONE)
 # Get the second dynamic solver for the parabolic problem
